@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Smart Internship Platform</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <nav class="navbar" id="navbar"></nav>
+
+  <div class="container">
+    <div class="auth-wrapper">
+      <div class="auth-card">
+        <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem; text-align: center;">
+          Welcome Back
+        </h2>
+        <p style="text-align: center; color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1.5rem;">
+          Sign in to view your matched internships
+        </p>
+
+        <div id="loginAlert" class="alert"></div>
+
+        <form id="loginForm">
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" id="email" class="form-control" placeholder="you@university.edu" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" id="loginBtn">
+            Sign In
+          </button>
+        </form>
+
+        <!-- Quick 1-Click Demo Logins -->
+        <div class="demo-bar">
+          <strong>⚡ Quick 1-Click Demo Login:</strong>
+          <div class="demo-btn-group">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillDemo('student')">
+              👨‍🎓 Student Demo
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillDemo('admin')">
+              🛡️ Admin Demo
+            </button>
+          </div>
+        </div>
+
+        <p style="text-align: center; font-size: 0.875rem; color: var(--gray-600); margin-top: 1.5rem;">
+          Don't have an account? <a href="register.html" style="color: var(--primary); font-weight: 600;">Register here</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 Smart Internship Platform</p>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    if (isAuthenticated()) {
+      if (isAdmin()) {
+        window.location.href = 'admin.html';
+      } else {
+        window.location.href = 'dashboard.html';
+      }
+    }
+
+    function fillDemo(type) {
+      if (type === 'student') {
+        document.getElementById('email').value = 'student@platform.com';
+        document.getElementById('password').value = 'student123';
+      } else {
+        document.getElementById('email').value = 'admin@platform.com';
+        document.getElementById('password').value = 'admin123';
+      }
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('loginBtn');
+
+      btn.disabled = true;
+      btn.textContent = 'Authenticating...';
+
+      try {
+        const res = await apiRequest('/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+
+        if (res.success && res.data) {
+          setAuth(res.data.token, res.data);
+          showAlert('loginAlert', 'Login successful! Redirecting...', false);
+          setTimeout(() => {
+            if (res.data.role === 'ROLE_ADMIN') {
+              window.location.href = 'admin.html';
+            } else {
+              window.location.href = 'dashboard.html';
+            }
+          }, 800);
+        }
+      } catch (err) {
+        showAlert('loginAlert', err.message || 'Login failed');
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

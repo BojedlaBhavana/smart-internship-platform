@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - Smart Internship Platform</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <nav class="navbar" id="navbar"></nav>
+
+  <div class="container">
+    <div class="auth-wrapper">
+      <div class="auth-card">
+        <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem; text-align: center;">
+          Create Your Account
+        </h2>
+        <p style="text-align: center; color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1.5rem;">
+          Get tailored matches for your skills
+        </p>
+
+        <div id="registerAlert" class="alert"></div>
+
+        <form id="registerForm">
+          <div class="form-group">
+            <label class="form-label" for="fullName">Full Name</label>
+            <input type="text" id="fullName" class="form-control" placeholder="Alex Johnson" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" id="email" class="form-control" placeholder="alex@university.edu" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password (min. 6 characters)</label>
+            <input type="password" id="password" class="form-control" placeholder="••••••••" minlength="6" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="role">Register As</label>
+            <select id="role" class="form-control">
+              <option value="ROLE_STUDENT">Student (Find Internships)</option>
+              <option value="ROLE_ADMIN">Admin / Recruiter (Post Internships)</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" id="regBtn">
+            Create Account
+          </button>
+        </form>
+
+        <p style="text-align: center; font-size: 0.875rem; color: var(--gray-600); margin-top: 1.5rem;">
+          Already have an account? <a href="login.html" style="color: var(--primary); font-weight: 600;">Sign in here</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 Smart Internship Platform</p>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    if (isAuthenticated()) {
+      window.location.href = isAdmin() ? 'admin.html' : 'dashboard.html';
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fullName = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const role = document.getElementById('role').value;
+      const btn = document.getElementById('regBtn');
+
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+
+      try {
+        const res = await apiRequest('/api/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ fullName, email, password, role })
+        });
+
+        if (res.success && res.data) {
+          setAuth(res.data.token, res.data);
+          showAlert('registerAlert', 'Account registered successfully! Redirecting...', false);
+          setTimeout(() => {
+            if (res.data.role === 'ROLE_ADMIN') {
+              window.location.href = 'admin.html';
+            } else {
+              window.location.href = 'dashboard.html';
+            }
+          }, 800);
+        }
+      } catch (err) {
+        showAlert('registerAlert', err.message || 'Registration failed');
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    });
+  </script>
+</body>
+</html>

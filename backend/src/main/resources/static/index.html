@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Internship Platform - AI Skill-Matching Portal</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Dynamic Navigation Bar -->
+  <nav class="navbar" id="navbar"></nav>
+
+  <!-- Hero Section -->
+  <div style="background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%); padding: 4rem 1.5rem 2.5rem; text-align: center;">
+    <div style="max-width: 800px; margin: 0 auto;">
+      <span class="role-badge role-student" style="font-size: 0.85rem; padding: 0.35rem 0.85rem; margin-bottom: 1rem; display: inline-block;">
+        ✨ Smart Skill-Matching Engine
+      </span>
+      <h1 style="font-size: 2.75rem; font-weight: 800; color: var(--dark); margin-bottom: 1rem; line-height: 1.2;">
+        Accelerate Your Career with the Right Internship
+      </h1>
+      <p style="font-size: 1.15rem; color: var(--gray-600); margin-bottom: 2rem;">
+        Match your real skills with tailored industry openings, track skill gaps, and stand out with verified profiles.
+      </p>
+      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="register.html" class="btn btn-primary" style="padding: 0.75rem 1.75rem; font-size: 1rem;">Get Started as Student</a>
+        <a href="login.html" class="btn btn-secondary" style="padding: 0.75rem 1.75rem; font-size: 1rem;">Login / Demo Access</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Container -->
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--dark);">Featured Opportunities</h2>
+        <p style="color: var(--gray-600); font-size: 0.9rem;">Explore active openings and see what companies are demanding right now</p>
+      </div>
+      <div>
+        <input type="text" id="searchInput" placeholder="Filter by title, company, or skill..." class="form-control" style="width: 300px;">
+      </div>
+    </div>
+
+    <!-- Alert -->
+    <div id="homeAlert" class="alert"></div>
+
+    <!-- Internships Grid -->
+    <div id="internshipsGrid" class="internship-grid">
+      <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--gray-400);">
+        Loading internships...
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 Smart Internship Platform. Built with Spring Boot, Spring Security, JWT, MySQL & Vanilla JS.</p>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    let allInternships = [];
+
+    async function loadInternships() {
+      try {
+        const response = await fetch('/api/internships');
+        const data = await response.json();
+        if (data.success) {
+          allInternships = data.data || [];
+          renderInternships(allInternships);
+        } else {
+          showAlert('homeAlert', data.message || 'Failed to load internships');
+        }
+      } catch (err) {
+        showAlert('homeAlert', 'Could not connect to the backend server. Is Spring Boot running?');
+      }
+    }
+
+    function renderInternships(list) {
+      const container = document.getElementById('internshipsGrid');
+      if (!list || list.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: white; border-radius: var(--radius); border: 1px dashed var(--gray-200);">
+            <p style="color: var(--gray-600); font-size: 1.1rem; margin-bottom: 0.5rem;">No internships found</p>
+            <p style="font-size: 0.875rem; color: var(--gray-400);">Log in as an Admin to post new opportunities!</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(item => `
+        <div class="internship-card">
+          <div>
+            <div class="internship-header">
+              <h3 class="internship-title">${item.title}</h3>
+            </div>
+            <div class="internship-company">🏢 ${item.company}</div>
+            <div class="internship-meta">
+              <span>📍 ${item.location}</span>
+              <span>📅 Deadline: ${item.deadline || 'Open'}</span>
+            </div>
+            <p class="internship-desc">${item.description || 'No description provided.'}</p>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--gray-600); text-transform: uppercase; margin-bottom: 0.4rem;">
+              Required Skills
+            </div>
+            <div class="tag-container" style="margin-bottom: 1rem;">
+              ${(item.requiredSkills && item.requiredSkills.length > 0)
+                ? item.requiredSkills.map(s => `<span class="tag">#${s}</span>`).join('')
+                : '<span style="color: var(--gray-400); font-size: 0.8rem;">No specific skills listed</span>'
+              }
+            </div>
+            <a href="login.html" class="btn btn-secondary btn-sm" style="width: 100%;">
+              Check Match & Apply
+            </a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      const filtered = allInternships.filter(item => {
+        const titleMatch = item.title && item.title.toLowerCase().includes(query);
+        const companyMatch = item.company && item.company.toLowerCase().includes(query);
+        const skillMatch = item.requiredSkills && item.requiredSkills.some(s => s.toLowerCase().includes(query));
+        return titleMatch || companyMatch || skillMatch;
+      });
+      renderInternships(filtered);
+    });
+
+    document.addEventListener('DOMContentLoaded', loadInternships);
+  </script>
+</body>
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard - Smart Internship Platform</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <nav class="navbar" id="navbar"></nav>
+
+  <div class="container">
+    <!-- Header Banner -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--dark);" id="welcomeTitle">Student Dashboard</h1>
+        <p style="color: var(--gray-600); font-size: 0.95rem;">Manage your skills and see instant matching scores against real openings.</p>
+      </div>
+      <div style="display: flex; gap: 1rem;">
+        <button class="btn btn-secondary btn-sm" onclick="toggleEditProfile()">
+          ✏️ Edit Profile & Skills
+        </button>
+      </div>
+    </div>
+
+    <!-- Feedback Alert -->
+    <div id="dashboardAlert" class="alert"></div>
+
+    <!-- Quick Stats -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+      <div class="card" style="margin-bottom: 0;">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase;">Your Skills</div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary);" id="statSkillCount">0</div>
+        <div style="font-size: 0.8rem; color: var(--gray-600);">Recorded in profile</div>
+      </div>
+      <div class="card" style="margin-bottom: 0;">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase;">Top Match</div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: var(--success);" id="statTopMatch">0%</div>
+        <div style="font-size: 0.8rem; color: var(--gray-600);">Best opportunity fit</div>
+      </div>
+      <div class="card" style="margin-bottom: 0;">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase;">Available Openings</div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: var(--dark);" id="statTotalInternships">0</div>
+        <div style="font-size: 0.8rem; color: var(--gray-600);">Active positions</div>
+      </div>
+    </div>
+
+    <!-- Profile & Skills Management Card (Collapsible/Editable) -->
+    <div class="card" id="profileCard" style="display: block;">
+      <div class="card-title">
+        <span>🎓 Education & Skill Profile</span>
+        <button class="btn btn-secondary btn-sm" onclick="toggleEditProfile()" id="toggleProfileBtn">Collapse</button>
+      </div>
+      <div class="card-subtitle">Keep this up to date to boost your match scores across active listings</div>
+
+      <form id="profileForm">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="fullNameInput">Full Name</label>
+            <input type="text" id="fullNameInput" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="degreeInput">Degree / Major</label>
+            <input type="text" id="degreeInput" class="form-control" placeholder="e.g. B.S. in Computer Science">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="universityInput">University / College</label>
+            <input type="text" id="universityInput" class="form-control" placeholder="e.g. Stanford University">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="gradYearInput">Graduation Year</label>
+            <input type="number" id="gradYearInput" class="form-control" placeholder="e.g. 2026" min="2020" max="2035">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="bioInput">Professional Summary / Bio</label>
+          <textarea id="bioInput" class="form-control" placeholder="Brief statement about your career interests and background..."></textarea>
+        </div>
+
+        <!-- Skills Tagging Section -->
+        <div class="form-group">
+          <label class="form-label">My Skills (Click 'x' to remove)</label>
+          <div id="skillsTagContainer" class="tag-container" style="min-height: 40px; padding: 0.5rem; background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 8px;">
+            <!-- Rendered student skills -->
+          </div>
+          <div class="tag-input-wrapper">
+            <input type="text" id="newSkillInput" class="form-control" placeholder="Type a skill (e.g. React, Python, Docker, Spring Boot) and press Enter" style="max-width: 450px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addCurrentSkill()">+ Add Skill</button>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem;">
+          <button type="submit" class="btn btn-primary" id="saveProfileBtn">
+            💾 Save Profile & Re-Match
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Matched Internships Section -->
+    <div style="margin-top: 2.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--dark);">
+          🎯 Your Matched Internships
+        </h2>
+        <p style="color: var(--gray-600); font-size: 0.875rem;">Ranked by algorithm based on your verified skill overlap</p>
+      </div>
+      <div>
+        <select id="matchFilter" class="form-control" style="width: 200px;" onchange="applyFilter()">
+          <option value="all">All Matches</option>
+          <option value="high">High Match (>= 70%)</option>
+          <option value="medium">Medium Match (40-69%)</option>
+          <option value="low">Needs Upskilling (< 40%)</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="matchedGrid" class="internship-grid">
+      <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--gray-400);">
+        Calculating matches with your skills...
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 Smart Internship Platform</p>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    if (!isAuthenticated()) {
+      window.location.href = 'login.html';
+    }
+
+    let currentSkills = new Set();
+    let matchedInternships = [];
+
+    async function loadDashboard() {
+      try {
+        // 1. Fetch Profile
+        const profileRes = await apiRequest('/api/student/profile');
+        if (profileRes.success && profileRes.data) {
+          populateProfile(profileRes.data);
+        }
+
+        // 2. Fetch Matched Internships
+        await loadMatchedInternships();
+      } catch (err) {
+        showAlert('dashboardAlert', err.message || 'Failed to load dashboard data');
+      }
+    }
+
+    function populateProfile(data) {
+      document.getElementById('welcomeTitle').textContent = `Welcome back, ${data.fullName}!`;
+      document.getElementById('fullNameInput').value = data.fullName || '';
+      document.getElementById('degreeInput').value = data.degree || '';
+      document.getElementById('universityInput').value = data.university || '';
+      document.getElementById('gradYearInput').value = data.graduationYear || '';
+      document.getElementById('bioInput').value = data.bio || '';
+
+      currentSkills = new Set(data.skills || []);
+      renderSkillTags();
+    }
+
+    function renderSkillTags() {
+      const container = document.getElementById('skillsTagContainer');
+      document.getElementById('statSkillCount').textContent = currentSkills.size;
+
+      if (currentSkills.size === 0) {
+        container.innerHTML = `<span style="color: var(--gray-400); font-size: 0.85rem;">No skills added yet. Type below to add your first skill!</span>`;
+        return;
+      }
+
+      container.innerHTML = Array.from(currentSkills).map(s => `
+        <span class="tag tag-removable">
+          ${s}
+          <button type="button" class="tag-remove-btn" onclick="removeSkill('${s.replace(/'/g, "\\'")}')">&times;</button>
+        </span>
+      `).join('');
+    }
+
+    function addCurrentSkill() {
+      const input = document.getElementById('newSkillInput');
+      const val = input.value.trim();
+      if (!val) return;
+
+      currentSkills.add(val);
+      input.value = '';
+      renderSkillTags();
+    }
+
+    document.getElementById('newSkillInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addCurrentSkill();
+      }
+    });
+
+    function removeSkill(skillName) {
+      currentSkills.delete(skillName);
+      renderSkillTags();
+    }
+
+    function toggleEditProfile() {
+      const card = document.getElementById('profileCard');
+      const form = document.getElementById('profileForm');
+      const btn = document.getElementById('toggleProfileBtn');
+
+      if (form.style.display === 'none') {
+        form.style.display = 'block';
+        btn.textContent = 'Collapse';
+      } else {
+        form.style.display = 'none';
+        btn.textContent = 'Expand';
+      }
+    }
+
+    // Save Profile
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const saveBtn = document.getElementById('saveProfileBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving & Re-calculating...';
+
+      const payload = {
+        fullName: document.getElementById('fullNameInput').value.trim(),
+        degree: document.getElementById('degreeInput').value.trim(),
+        university: document.getElementById('universityInput').value.trim(),
+        graduationYear: parseInt(document.getElementById('gradYearInput').value, 10) || null,
+        bio: document.getElementById('bioInput').value.trim(),
+        skills: Array.from(currentSkills)
+      };
+
+      try {
+        const res = await apiRequest('/api/student/profile', {
+          method: 'PUT',
+          body: JSON.stringify(payload)
+        });
+
+        if (res.success) {
+          showAlert('dashboardAlert', 'Profile and skills updated! Match scores refreshed.', false);
+          // Update cached user fullName
+          const u = getUser();
+          if (u) {
+            u.fullName = payload.fullName;
+            setUser(u);
+            renderNavbar();
+          }
+          await loadMatchedInternships();
+        }
+      } catch (err) {
+        showAlert('dashboardAlert', err.message || 'Error updating profile');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Save Profile & Re-Match';
+      }
+    });
+
+    // Load Matches
+    async function loadMatchedInternships() {
+      try {
+        const res = await apiRequest('/api/matching/dashboard');
+        if (res.success) {
+          matchedInternships = res.data || [];
+          document.getElementById('statTotalInternships').textContent = matchedInternships.length;
+
+          if (matchedInternships.length > 0) {
+            document.getElementById('statTopMatch').textContent = `${matchedInternships[0].matchPercentage}%`;
+          } else {
+            document.getElementById('statTopMatch').textContent = '0%';
+          }
+
+          applyFilter();
+        }
+      } catch (err) {
+        showAlert('dashboardAlert', err.message || 'Error fetching matched internships');
+      }
+    }
+
+    function applyFilter() {
+      const filter = document.getElementById('matchFilter').value;
+      let filtered = matchedInternships;
+
+      if (filter === 'high') {
+        filtered = matchedInternships.filter(m => m.matchPercentage >= 70);
+      } else if (filter === 'medium') {
+        filtered = matchedInternships.filter(m => m.matchPercentage >= 40 && m.matchPercentage < 70);
+      } else if (filter === 'low') {
+        filtered = matchedInternships.filter(m => m.matchPercentage < 40);
+      }
+
+      renderMatches(filtered);
+    }
+
+    function renderMatches(list) {
+      const container = document.getElementById('matchedGrid');
+      if (!list || list.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: white; border-radius: var(--radius); border: 1px dashed var(--gray-200);">
+            <p style="color: var(--gray-600); font-size: 1.1rem; margin-bottom: 0.5rem;">No internships match this filter</p>
+            <p style="font-size: 0.875rem; color: var(--gray-400);">Try adjusting your filter or add more skills to your profile above!</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(item => {
+        let badgeClass = 'score-low';
+        let fillClass = 'fill-low';
+        let matchLabel = `${item.matchPercentage}% Match`;
+
+        if (item.matchPercentage >= 70) {
+          badgeClass = 'score-high';
+          fillClass = 'fill-high';
+          if (item.matchPercentage === 100) matchLabel = '🎯 100% Perfect Match';
+        } else if (item.matchPercentage >= 40) {
+          badgeClass = 'score-medium';
+          fillClass = 'fill-medium';
+        }
+
+        return `
+          <div class="internship-card">
+            <div>
+              <div class="internship-header">
+                <h3 class="internship-title">${item.title}</h3>
+                <span class="match-score ${badgeClass}">${matchLabel}</span>
+              </div>
+              <div class="internship-company">🏢 ${item.company}</div>
+              <div class="internship-meta">
+                <span>📍 ${item.location}</span>
+                <span>📅 Deadline: ${item.deadline || 'Open'}</span>
+              </div>
+
+              <!-- Match Progress Bar -->
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill ${fillClass}" style="width: ${item.matchPercentage}%;"></div>
+              </div>
+
+              <p class="internship-desc">${item.description || 'No description provided.'}</p>
+            </div>
+
+            <div>
+              <!-- Matched Skills -->
+              <div style="margin-bottom: 0.6rem;">
+                <div style="font-size: 0.725rem; font-weight: 700; color: var(--success); text-transform: uppercase; margin-bottom: 0.3rem;">
+                  ✓ Matched Skills (${item.matchedSkills ? item.matchedSkills.length : 0})
+                </div>
+                <div class="tag-container">
+                  ${(item.matchedSkills && item.matchedSkills.length > 0)
+                    ? item.matchedSkills.map(s => `<span class="tag tag-match">✓ ${s}</span>`).join('')
+                    : '<span style="color: var(--gray-400); font-size: 0.75rem;">None matched yet</span>'
+                  }
+                </div>
+              </div>
+
+              <!-- Missing Skills (Upskill Roadmap) -->
+              <div style="margin-bottom: 1rem;">
+                <div style="font-size: 0.725rem; font-weight: 700; color: var(--warning); text-transform: uppercase; margin-bottom: 0.3rem;">
+                  ⚡ Skills to Learn (${item.missingSkills ? item.missingSkills.length : 0})
+                </div>
+                <div class="tag-container">
+                  ${(item.missingSkills && item.missingSkills.length > 0)
+                    ? item.missingSkills.map(s => `<span class="tag tag-missing">+ ${s}</span>`).join('')
+                    : '<span style="color: var(--success); font-size: 0.75rem;">🎉 You meet all skill requirements!</span>'
+                  }
+                </div>
+              </div>
+
+              <button class="btn btn-primary btn-sm" style="width: 100%;" onclick="applyInternship('${item.title}', '${item.company}')">
+                Apply Now
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function applyInternship(title, company) {
+      alert(`Application submitted successfully for ${title} at ${company}!\nThe recruiter will review your skill match profile.`);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+  </script>
+</body>
+</html>
